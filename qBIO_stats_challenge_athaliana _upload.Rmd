@@ -1,0 +1,98 @@
+---
+title: "Phacking Challenge"
+author: "AJ Lonski"
+date: "2025-09-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+```
+
+```{r reading in data}
+#reading in the data
+data <- read.csv("https://catalog.ourworldindata.org/garden/covid/latest/compact/compact.csv", na.strings = "",header=T)
+```
+
+```{r Filtering data and making fake variable}
+# setting seed for fake variable generation <3
+set.seed(5)
+
+# filtering csv for only European countries 
+europe_only <- data %>% filter(continent == "Europe") %>%
+  select(country, date, new_cases)
+
+# making new fake variable -- average # of bootcamps attended annually ;)
+average_bootcamps <- data.frame(country = unique(europe_only$country),
+                                bootcamps = 
+                                  rnorm(length(unique(europe_only$country)), 
+                                        10, 3))
+
+#joining fake variable back with original df
+europe_only <- europe_only %>% left_join(average_bootcamps, by = "country")
+
+# date mutate (to look at correlations later)
+europe_only <- europe_only %>% mutate(date = as.numeric(gsub("-", "", date)))
+```
+
+```{r Correlation}
+# looking at correlation, lots of steps!
+res <- europe_only %>%
+  group_by(date) %>% # grouping by date (averaging all countries together)
+  filter(!all(is.na(new_cases))) %>% # filtering out NA values
+  summarise(cor_res = list(cor.test(new_cases, bootcamps)), # computing cor
+            .groups = "drop") %>% # ungrouping data
+  mutate(cor_estimate = sapply(cor_res, function(x) x$estimate), # computing est
+         p_value = sapply(cor_res, function(x) x$p.value)) # computing pvals
+
+# filtering out NA pvals
+res <- res %>% filter(!is.na(p_value)) 
+
+# arranging correlation in descending order (to see what correlates most)
+res %>% arrange(-cor_estimate)
+```
+
+```{r Plotting}
+#plotting time!
+library(ggplot2)
+library(lubridate) #also at top of doc, just here so you know its for dates
+
+#converting dates from numeric back to YYYY-MM-DD format (thank you workshop)
+res <- res %>% mutate(date = ymd(as.character(date)))
+
+# plotting date x correlation, highlighting significant pvals 
+ggplot(res, aes(x = date, y = cor_estimate)) + 
+  geom_line(alpha = 0.4) +
+  geom_point(data = subset(res, p_value <= 0.05), size = 2) + # "sig" points
+  geom_hline(yintercept = 0, linetype = "dashed") + # line = 0 correlation
+  labs(x = "Date", y = "Correlation", 
+       title = "Europe COVID cases + average bootcamp attendance (per yr)",
+       subtitle = "Points = p < 0.05")
+```
+
+```{r Plotting Part 2}
+### if we look at the entire graph, we can see that the pattern is pretty
+# much meaningless and changes between days
+# but if we JUST select the sig points, we can p hack :D 
+# filtering for sig + negative correlations (for phacking interpretation, hehe)
+sig_neg_only <- res %>% filter(p_value <= 0.05 & cor_estimate < 0)
+
+ggplot(data = sig_neg_only, aes(x = date, y = cor_estimate)) +
+  geom_point(color = "blue", size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(
+    title = "European COVID cases decrease with bootcamp attendance",
+    subtitle = "p < 0.05 only",
+    x = "Date (July 9 - Sep 3 2023)", y = "Correlation"
+  ) 
+```
+
+Now, onto the best part; the interpretation!
+
+Basically, we can argue that over the period of July 9 - Sep 3 2023, attending 
+bootcamps was negatively correlated with new COVID cases. In (p-hacking) other 
+words, attending more bootcamps reduces the number of COVID cases. Ain't that 
+something? Try going to more bio bootcamps and help out your fellow neighbor!
