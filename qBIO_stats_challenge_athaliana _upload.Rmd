@@ -66,7 +66,7 @@ res <- res %>% mutate(date = ymd(as.character(date)))
 # plotting date x correlation, highlighting significant pvals 
 ggplot(res, aes(x = date, y = cor_estimate)) + 
   geom_line(alpha = 0.4) +
-  geom_point(data = subset(res, p_value <= 0.05), size = 2) + # "sig" points
+  geom_point(data = subset(res, p_value <= 0.05), size = 2) + # "significant"
   geom_hline(yintercept = 0, linetype = "dashed") + # line = 0 correlation
   labs(x = "Date", y = "Correlation", 
        title = "Europe COVID cases + average bootcamp attendance (per yr)",
@@ -76,8 +76,8 @@ ggplot(res, aes(x = date, y = cor_estimate)) +
 ```{r Plotting Part 2}
 ### if we look at the entire graph, we can see that the pattern is pretty
 # much meaningless and changes between days
-# but if we JUST select the sig points, we can p hack :D 
-# filtering for sig + negative correlations (for phacking interpretation, hehe)
+# but if we JUST select the significant points, we can p hack :D 
+# filtering for significant + negative correlations (for phacking interpretation, hehe)
 sig_neg_only <- res %>% filter(p_value <= 0.05 & cor_estimate < 0)
 
 ggplot(data = sig_neg_only, aes(x = date, y = cor_estimate)) +
@@ -95,4 +95,8 @@ Now, onto the best part; the interpretation!
 Basically, we can argue that over the period of July 9 - Sep 3 2023, attending 
 bootcamps was negatively correlated with new COVID cases. In (p-hacking) other 
 words, attending more bootcamps reduces the number of COVID cases. Ain't that 
-something? Try going to more bio bootcamps and help out your fellow neighbor!
+something? Try going to more bio bootcamps and help out your fellow neighbor! 
+Attending boot camps contributes to a sense of community that makes people more 
+likely to follow health guidelines to prevent their neighbors from getting sick! 
+Community engagement also helps to spread scientific understanding of COVID 
+outbreaks and cases.
