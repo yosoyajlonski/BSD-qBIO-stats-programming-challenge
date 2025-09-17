@@ -74,7 +74,7 @@ ggplot(res, aes(x = date, y = cor_estimate)) +
 ```
 If we look at the entire graph, we can see that the pattern is pretty
 much meaningless and changes between days. But, if we JUST select the 
-significant points, we can p-hack! :D 
+significant points, we can p-hack! 
 
 ```{r Plotting Part 2}
 # filtering for significant + negative correlations (for phacking interpretation, hehe)
