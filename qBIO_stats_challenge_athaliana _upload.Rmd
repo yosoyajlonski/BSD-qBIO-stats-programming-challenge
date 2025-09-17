@@ -72,11 +72,11 @@ ggplot(res, aes(x = date, y = cor_estimate)) +
        title = "Europe COVID cases + average bootcamp attendance (per yr)",
        subtitle = "Points = p < 0.05")
 ```
+If we look at the entire graph, we can see that the pattern is pretty
+much meaningless and changes between days. But, if we JUST select the 
+significant points, we can p-hack! :D 
 
 ```{r Plotting Part 2}
-### if we look at the entire graph, we can see that the pattern is pretty
-# much meaningless and changes between days
-# but if we JUST select the significant points, we can p hack :D 
 # filtering for significant + negative correlations (for phacking interpretation, hehe)
 sig_neg_only <- res %>% filter(p_value <= 0.05 & cor_estimate < 0)
 
